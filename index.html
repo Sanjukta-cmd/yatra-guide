@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YatraGuide - Smart Travel & Route Intelligence</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-slate-950">
+
+  <!-- TOP APP BAR -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-xl shadow-lg shadow-orange-500/20">
+          🧭
+        </div>
+        <div>
+          <h1 class="text-lg font-black text-white tracking-tight">YatraGuide</h1>
+          <p class="text-xs text-amber-400 font-medium">Smart Route & Multi-Modal Journey Planner</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="window.print()" class="px-3.5 py-1.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition flex items-center gap-1.5 cursor-pointer">
+          🖨️ Export Plan
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN PLANNER CONTAINER -->
+  <main class="max-w-6xl w-full mx-auto px-4 py-6 flex-grow space-y-6">
+
+    <!-- SEARCH & ROUTE SELECTOR PANEL -->
+    <section class="p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl space-y-5">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Starting From</label>
+          <div class="relative">
+            <span class="absolute left-3.5 top-3.5 text-lg">📍</span>
+            <input id="inp-from" type="text" value="Delhi (NCR)" readonly class="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-800/80 border border-slate-700 font-bold text-slate-200 focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Destination</label>
+          <div class="relative">
+            <span class="absolute left-3.5 top-3.5 text-lg">🛕</span>
+            <select id="inp-to" onchange="updateGuide()" class="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-800 border border-amber-500/50 font-bold text-amber-300 focus:outline-none cursor-pointer">
+              <option value="vrindavan">Vrindavan (Braj Bhoomi, UP)</option>
+              <option value="agra" disabled>Agra (Coming next)</option>
+              <option value="haridwar" disabled>Haridwar / Rishikesh (Coming next)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Trip Duration</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" onclick="setTripDays(1)" id="btn-day-1" class="py-3 rounded-2xl font-bold text-xs border border-slate-700 bg-slate-800 text-slate-400 cursor-pointer">1 Day</button>
+            <button type="button" onclick="setTripDays(2)" id="btn-day-2" class="py-3 rounded-2xl font-bold text-xs border-2 border-amber-500 bg-amber-500/10 text-amber-300 cursor-pointer shadow-lg shadow-amber-500/10">2 Days</button>
+            <button type="button" onclick="setTripDays(3)" id="btn-day-3" class="py-3 rounded-2xl font-bold text-xs border border-slate-700 bg-slate-800 text-slate-400 cursor-pointer">3 Days</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEARBY PLACES DISCOVERY EXTENSION -->
+      <div class="pt-4 border-t border-slate-800/80">
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">
+          Want to explore neighboring spiritual gems? (Select to include in itinerary)
+        </label>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <label class="p-3 rounded-2xl border border-slate-700 bg-slate-800/60 hover:border-slate-600 flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-300">
+            <input type="checkbox" id="ext-mathura" checked onchange="updateGuide()" class="w-4 h-4 accent-amber-500 rounded">
+            <span>🛕 Mathura (+15 km)</span>
+          </label>
+          <label class="p-3 rounded-2xl border border-slate-700 bg-slate-800/60 hover:border-slate-600 flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-300">
+            <input type="checkbox" id="ext-govardhan" checked onchange="updateGuide()" class="w-4 h-4 accent-amber-500 rounded">
+            <span>⛰️ Govardhan (+22 km)</span>
+          </label>
+          <label class="p-3 rounded-2xl border border-slate-700 bg-slate-800/60 hover:border-slate-600 flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-300">
+            <input type="checkbox" id="ext-barsana" onchange="updateGuide()" class="w-4 h-4 accent-amber-500 rounded">
+            <span>🦚 Barsana (+40 km)</span>
+          </label>
+          <label class="p-3 rounded-2xl border border-slate-700 bg-slate-800/60 hover:border-slate-600 flex items-center gap-2.5 cursor-pointer text-xs font-bold text-slate-300">
+            <input type="checkbox" id="ext-gokul" onchange="updateGuide()" class="w-4 h-4 accent-amber-500 rounded">
+            <span>🌊 Gokul & Raman Reti</span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- MULTI-MODAL TRANSIT SELECTOR -->
+    <section class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+          <span>🚀 Multi-Modal Transit Comparisons</span>
+          <span class="text-xs bg-slate-800 text-slate-400 font-semibold px-2.5 py-0.5 rounded-full border border-slate-700">Choose preferred mode</span>
+        </h2>
+      </div>
+
+      <!-- Mode Tabs: Road / Train / Flight -->
+      <div class="grid grid-cols-3 gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
+        <button onclick="setTransitMode('road')" id="tab-road" class="py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 transition cursor-pointer flex items-center justify-center gap-2">
+          <span>🚗 By Road</span>
+        </button>
+        <button onclick="setTransitMode('train')" id="tab-train" class="py-2.5 rounded-xl font-bold text-sm bg-transparent text-slate-400 hover:text-white transition cursor-pointer flex items-center justify-center gap-2">
+          <span>🚆 By Train</span>
+        </button>
+        <button onclick="setTransitMode('flight')" id="tab-flight" class="py-2.5 rounded-xl font-bold text-sm bg-transparent text-slate-400 hover:text-white transition cursor-pointer flex items-center justify-center gap-2">
+          <span>✈️ By Air</span>
+        </button>
+      </div>
+
+      <!-- ROAD ROUTES VIEW -->
+      <div id="view-transit-road" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Route 1: Yamuna Expressway -->
+        <div class="p-5 rounded-3xl bg-slate-900 border-2 border-amber-500/40 hover:border-amber-500 transition space-y-4 relative overflow-hidden">
+          <span class="absolute top-4 right-4 bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">Recommended</span>
+          <div>
+            <h3 class="font-extrabold text-white text-base">Route 1: Yamuna Expressway (Fastest)</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Delhi ➔ Greater Noida ➔ Jewar ➔ Vrindavan Exit</p>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center bg-slate-800/60 p-3 rounded-2xl border border-slate-800">
+            <div><p class="text-[10px] uppercase font-bold text-slate-500">Distance</p><p class="text-sm font-black text-slate-200">182 km</p></div>
+            <div><p class="text-[10px] uppercase font-bold text-slate-500">Duration</p><p class="text-sm font-black text-emerald-400">3h 15m</p></div>
+            <div><p class="text-[10px] uppercase font-bold text-slate-500">Approx Toll</p><p class="text-sm font-black text-amber-400">₹205</p></div>
+          </div>
+          <div class="space-y-1.5 text-xs text-slate-300">
+            <p class="font-bold text-slate-400">🍔 Popular En-Route Pit Stops:</p>
+            <div class="p-2.5 rounded-xl bg-slate-800/40 border border-slate-800 space-y-1">
+              <p><strong class="text-amber-400">Jewar Toll Plaza Food Court</strong> (McDonald's, Costa, Haldiram's, Clean Restrooms at Mile 45)</p>
+              <p><strong class="text-amber-400">Shiva Dhaba / Bajna Cut</strong> (Fresh Parathas & Kulhad Chai)</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Route 2: NH-19 (Old Mathura Road) -->
+        <div class="p-5 rounded-3xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition space-y-4">
+          <div>
+            <h3 class="font-extrabold text-white text-base">Route 2: Via NH-19 (Traditional Highway)</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Delhi ➔ Faridabad ➔ Ballabhgarh ➔ Palwal ➔ Hodal ➔ Kosi Kalan ➔ Vrindavan</p>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center bg-slate-800/60 p-3 rounded-2xl border border-slate-800">
+            <div><p class="text-[10px] uppercase font-bold text-slate-500">Distance</p><p class="text-sm font-black text-slate-200">165 km</p></div>
+            <div><p class="text-[10px] uppercase font-bold text-slate-500">Duration</p><p class="text-sm font-black text-orange-400">4h 10m</p></div>
+            <div><p class="text-[10px] uppercase font-bold text-slate-500">Approx Toll</p><p class="text-sm font-black text-amber-400">₹145</p></div>
+          </div>
+          <div class="space-y-1.5 text-xs text-slate-300">
+            <p class="font-bold text-slate-400">📍 En-Route Landmarks & Food:</p>
+            <div class="p-2.5 rounded-xl bg-slate-800/40 border border-slate-800 space-y-1">
+              <p><strong class="text-amber-400">Kokilavan Shani Dev Temple</strong> (Near Kosi Kalan, worth a 20-min stopover)</p>
+              <p><strong class="text-amber-400">Dabchick Tourist Complex</strong> (Hodal, classic Haryana tourism pit stop)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRAIN VIEW -->
+      <div id="view-transit-train" class="hidden p-5 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
+        <div>
+          <h3 class="font-extrabold text-white text-base">Direct Trains from Delhi (NDLS / NZM) to Mathura Junction (MTJ)</h3>
+          <p class="text-xs text-slate-400">Vrindavan is just 12 km (20 mins by E-Rickshaw/Auto) from Mathura Junction railway station.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="p-4 rounded-2xl bg-slate-800/70 border border-slate-700/60">
+            <div class="flex justify-between items-start">
+              <span class="text-xs font-bold text-amber-400">Vande Bharat Exp (20172)</span>
+              <span class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded font-bold">1h 15m</span>
+            </div>
+            <p class="text-sm font-extrabold text-white mt-1">NZM ➔ Mathura Jn</p>
+            <p class="text-xs text-slate-400 mt-2">Departs ~02:40 PM. Premium comfort, meals included.</p>
+          </div>
+          <div class="p-4 rounded-2xl bg-slate-800/70 border border-slate-700/60">
+            <div class="flex justify-between items-start">
+              <span class="text-xs font-bold text-amber-400">Gatimaan Express (12050)</span>
+              <span class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded font-bold">1h 25m</span>
+            </div>
+            <p class="text-sm font-extrabold text-white mt-1">NZM ➔ Mathura Jn</p>
+            <p class="text-xs text-slate-400 mt-2">Departs ~08:10 AM. Excellent for early morning arrival.</p>
+          </div>
+          <div class="p-4 rounded-2xl bg-slate-800/70 border border-slate-700/60">
+            <div class="flex justify-between items-start">
+              <span class="text-xs font-bold text-amber-400">Taj Express (12280)</span>
+              <span class="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded font-bold">2h 05m</span>
+            </div>
+            <p class="text-sm font-extrabold text-white mt-1">NDLS ➔ Mathura Jn</p>
+            <p class="text-xs text-slate-400 mt-2">Departs ~06:55 AM. Budget-friendly daily commuter train.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- FLIGHT VIEW -->
+      <div id="view-transit-flight" class="hidden p-5 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
+        <div>
+          <h3 class="font-extrabold text-white text-base">Aviation & Airport Connectivity</h3>
+          <p class="text-xs text-slate-400">Vrindavan does not have its own commercial airport. Best entry options below:</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-4 rounded-2xl bg-slate-800/70 border border-slate-700/60 space-y-2">
+            <span class="text-xs font-bold text-amber-400">Primary International Hub:</span>
+            <p class="text-base font-extrabold text-white">IGI Airport, New Delhi (DEL)</p>
+            <p class="text-xs text-slate-400">160 km from Vrindavan. Take the Delhi Airport Express / Southern Peripheral Road directly onto Yamuna Expressway via cab (~3.5 hrs).</p>
+          </div>
+          <div class="p-4 rounded-2xl bg-slate-800/70 border border-slate-700/60 space-y-2">
+            <span class="text-xs font-bold text-amber-400">Nearest Domestic Airport:</span>
+            <p class="text-base font-extrabold text-white">Agra Kheria Airport (AGR) / Jewar Airport (DXN)</p>
+            <p class="text-xs text-slate-400">Agra Airport is 70 km south (1.5h drive). Jewar International Airport (opening on the expressway) will be just 75 km away.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DYNAMIC DAY-BY-DAY ITINERARY -->
+    <section class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4 flex-wrap gap-2">
+        <div>
+          <h2 id="plan-title" class="text-xl font-black text-white">2-Day Crafted Itinerary</h2>
+          <p class="text-xs text-slate-400">Customized according to morning & evening temple darshan timings</p>
+        </div>
+        <span class="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-full font-bold">
+          ⚠️ Crucial: Temples close daily from 12:00 PM to 4:30 PM
+        </span>
+      </div>
+
+      <!-- Schedule Content Container -->
+      <div id="itinerary-days-container" class="space-y-6"></div>
+    </section>
+
+    <!-- LOCAL PRO-TIPS FOR TRAVELERS -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="p-5 rounded-3xl bg-slate-900 border border-slate-800 space-y-2">
+        <span class="text-2xl">👓</span>
+        <h4 class="font-bold text-sm text-white">Monkey & Spectacle Safety</h4>
+        <p class="text-xs text-slate-400 leading-relaxed">Vrindavan and Banke Bihari lanes are famous for swift monkeys. Keep eyeglasses, sunglasses, and smartphones inside zipped bags before entering temple corridors.</p>
+      </div>
+
+      <div class="p-5 rounded-3xl bg-slate-900 border border-slate-800 space-y-2">
+        <span class="text-2xl">🛺</span>
+        <h4 class="font-bold text-sm text-white">Local E-Rickshaw Navigation</h4>
+        <p class="text-xs text-slate-400 leading-relaxed">Outside cars are restricted near inner temples on weekends. Park your car at designated expressway lots (e.g. VIP parking or Chhatikara) and use local shared E-rickshaws (₹20-₹40 per person).</p>
+      </div>
+
+      <div class="p-5 rounded-3xl bg-slate-900 border border-slate-800 space-y-2">
+        <span class="text-2xl">🥛</span>
+        <h4 class="font-bold text-sm text-white">Must-Try Street Delicacies</h4>
+        <p class="text-xs text-slate-400 leading-relaxed">Mathura Peda at Brijwasi, hot morning Bedmi Puri with spicy aloo sabzi, and creamy Kulhad Rabdi & Lassi near Loi Bazaar.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-800/80 bg-slate-950 py-4 text-center text-xs text-slate-500">
+    YatraGuide • Smart Route Discovery & Multi-Modal Tourism Intelligence
+  </footer>
+
+  <!-- APPLICATION LOGIC SCRIPT -->
+  <script>
+    let selectedDays = 2;
+
+    function setTransitMode(mode) {
+      ['road', 'train', 'flight'].forEach(m => {
+        const view = document.getElementById(`view-transit-${m}`);
+        const tab = document.getElementById(`tab-${m}`);
+        if (m === mode) {
+          view.classList.remove('hidden');
+          tab.className = "py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 transition cursor-pointer flex items-center justify-center gap-2 shadow";
+        } else {
+          view.classList.add('hidden');
+          tab.className = "py-2.5 rounded-xl font-bold text-sm bg-transparent text-slate-400 hover:text-white transition cursor-pointer flex items-center justify-center gap-2";
+        }
+      });
+    }
+
+    function setTripDays(days) {
+      selectedDays = days;
+      [1, 2, 3].forEach(d => {
+        const btn = document.getElementById(`btn-day-${d}`);
+        if (d === days) {
+          btn.className = "py-3 rounded-2xl font-bold text-xs border-2 border-amber-500 bg-amber-500/10 text-amber-300 cursor-pointer shadow-lg shadow-amber-500/10";
+        } else {
+          btn.className = "py-3 rounded-2xl font-bold text-xs border border-slate-700 bg-slate-800 text-slate-400 cursor-pointer";
+        }
+      });
+      document.getElementById('plan-title').textContent = `${days}-Day Crafted Itinerary`;
+      renderItinerary();
+    }
+
+    function updateGuide() {
+      renderItinerary();
+    }
+
+    function renderItinerary() {
+      const container = document.getElementById('itinerary-days-container');
+      container.innerHTML = '';
+
+      const withMathura = document.getElementById('ext-mathura').checked;
+      const withGovardhan = document.getElementById('ext-govardhan').checked;
+      const withBarsana = document.getElementById('ext-barsana').checked;
+      const withGokul = document.getElementById('ext-gokul').checked;
+
+      // DAY 1: CORE VRINDAVAN
+      const day1 = document.createElement('div');
+      day1.className = "p-5 rounded-2xl bg-slate-800/50 border border-slate-700/70 space-y-3";
+      day1.innerHTML = `
+        <div class="flex items-center justify-between">
+          <h3 class="font-extrabold text-amber-400 text-base">Day 1: Heart of Vrindavan Darshan</h3>
+          <span class="text-xs bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full font-bold">Vrindavan Core</span>
+        </div>
+        <div class="space-y-3 text-xs text-slate-300">
+          <div class="flex gap-3">
+            <span class="font-black text-amber-400 w-16 flex-shrink-0">07:00 AM</span>
+            <div><strong class="text-white">Depart from Delhi:</strong> Take Yamuna Expressway. Stop at Jewar food plaza for breakfast.</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="font-black text-amber-400 w-16 flex-shrink-0">10:30 AM</span>
+            <div><strong class="text-white">Banke Bihari Temple:</strong> Morning Rajbhog Darshan (Note: closes strictly at 12:00 PM).</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="font-black text-slate-500 w-16 flex-shrink-0">12:30 PM</span>
+            <div class="text-slate-400"><strong class="text-slate-300">Afternoon Break:</strong> Temple doors close. Traditional lunch at Brijwasi or MVT restaurant; check-in at hotel.</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="font-black text-amber-400 w-16 flex-shrink-0">04:30 PM</span>
+            <div><strong class="text-white">ISKCON (Sri Krishna Balaram Temple):</strong> Soul-stirring evening kirtan and Aarti.</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="font-black text-amber-400 w-16 flex-shrink-0">07:00 PM</span>
+            <div><strong class="text-white">Prem Mandir Light & Musical Fountain Show:</strong> Mesmerizing Italian marble architecture illuminated at night.</div>
+          </div>
+        </div>
+      `;
+      container.appendChild(day1);
+
+      // DAY 2
+      if (selectedDays >= 2) {
+        const day2 = document.createElement('div');
+        day2.className = "p-5 rounded-2xl bg-slate-800/50 border border-slate-700/70 space-y-3";
+        let day2Content = '';
+
+        if (withMathura) {
+          day2Content += `
+            <div class="flex gap-3">
+              <span class="font-black text-amber-400 w-16 flex-shrink-0">08:00 AM</span>
+              <div><strong class="text-white">Shri Krishna Janmasthan (Mathura):</strong> Visit the sacred prison cell (Garbha Griha) and Keshavdev Temple.</div>
+            </div>
+            <div class="flex gap-3">
+              <span class="font-black text-amber-400 w-16 flex-shrink-0">10:30 AM</span>
+              <div><strong class="text-white">Dwarkadhish Temple & Vishram Ghat:</strong> Iconic Yamuna riverbank ghat where Lord Krishna rested after defeating Kamsa.</div>
+            </div>
+          `;
+        }
+
+        if (withGokul) {
+          day2Content += `
+            <div class="flex gap-3">
+              <span class="font-black text-amber-400 w-16 flex-shrink-0">04:00 PM</span>
+              <div><strong class="text-white">Gokul & Raman Reti:</strong> Walk barefoot on the sacred sands where infant Krishna played; visit Chintaharan Mahadev.</div>
+            </div>
+          `;
+        } else if (withGovardhan) {
+          day2Content += `
+            <div class="flex gap-3">
+              <span class="font-black text-amber-400 w-16 flex-shrink-0">04:00 PM</span>
+              <div><strong class="text-white">Govardhan Hill (Mansi Ganga & Dan Ghati):</strong> Holy spot of Govardhan Pooja. E-rickshaw Parikrama option available.</div>
+            </div>
+          `;
+        } else {
+          day2Content += `
+            <div class="flex gap-3">
+              <span class="font-black text-amber-400 w-16 flex-shrink-0">04:30 PM</span>
+              <div><strong class="text-white">Nidhivan & Yamuna Aarti at Kesi Ghat:</strong> Sacred grove where Raas Leela takes place and sunset river Aarti.</div>
+            </div>
+          `;
+        }
+
+        day2.innerHTML = `
+          <div class="flex items-center justify-between">
+            <h3 class="font-extrabold text-amber-400 text-base">Day 2: ${withMathura ? 'Mathura Heritage & Sacred Ghats' : 'Spiritual Outskirts Exploration'}</h3>
+            <span class="text-xs bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full font-bold">${withMathura ? 'Mathura + Extensions' : 'Extended Yatra'}</span>
+          </div>
+          <div class="space-y-3 text-xs text-slate-300">
+            ${day2Content}
+          </div>
+        `;
+        container.appendChild(day2);
+      }
+
+      // DAY 3
+      if (selectedDays >= 3) {
+        const day3 = document.createElement('div');
+        day3.className = "p-5 rounded-2xl bg-slate-800/50 border border-slate-700/70 space-y-3";
+        let day3Content = '';
+
+        if (withBarsana) {
+          day3Content += `
+            <div class="flex gap-3">
+              <span class="font-black text-amber-400 w-16 flex-shrink-0">08:00 AM</span>
+              <div><strong class="text-white">Barsana (Radha Rani Temple):</strong> Shriji temple situated atop Bhanugarh hill. Spectacular panoramic view of Braj.</div>
+            </div>
+            <div class="flex gap-3">
+              <span class="font-black text-amber-400 w-16 flex-shrink-0">11:00 AM</span>
+              <div><strong class="text-white">Nandgaon (Nand Bhavan):</strong> Home of Nanda Baba and Yashoda Maa, 8 km from Barsana.</div>
+            </div>
+          `;
+        } else if (withGovardhan) {
+          day3Content += `
+            <div class="flex gap-3">
+              <span class="font-black text-amber-400 w-16 flex-shrink-0">07:30 AM</span>
+              <div><strong class="text-white">Complete Govardhan Parikrama (21 km):</strong> Radha Kund, Shyam Kund, Kusum Sarovar, and Dan Ghati.</div>
+            </div>
+          `;
+        } else {
+          day3Content += `
+            <div class="flex gap-3">
+              <span class="font-black text-amber-400 w-16 flex-shrink-0">09:00 AM</span>
+              <div><strong class="text-white">Vaishno Devi Dham & Chamunda Devi:</strong> Giant idol of Maa Vaishno Devi and tranquil morning meditation.</div>
+            </div>
+          `;
+        }
+
+        day3Content += `
+          <div class="flex gap-3">
+            <span class="font-black text-emerald-400 w-16 flex-shrink-0">03:30 PM</span>
+            <div><strong class="text-white">Return Drive to Delhi:</strong> Head back via Yamuna Expressway before peak evening Delhi rush.</div>
+          </div>
+        `;
+
+        day3.innerHTML = `
+          <div class="flex items-center justify-between">
+            <h3 class="font-extrabold text-amber-400 text-base">Day 3: ${withBarsana ? 'Barsana, Nandgaon & Return Journey' : 'Grand Braj Parikrama & Farewell'}</h3>
+            <span class="text-xs bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full font-bold">Deep Heritage</span>
+          </div>
+          <div class="space-y-3 text-xs text-slate-300">
+            ${day3Content}
+          </div>
+        `;
+        container.appendChild(day3);
+      }
+    }
+
+    // Initial render on boot
+    window.addEventListener('DOMContentLoaded', () => {
+      renderItinerary();
+    });
+  </script>
+</body>
+</html>
